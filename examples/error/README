@@ -1,0 +1,10 @@
+This example shows what happens when you try to serialize a message
+that is missing required fields.
+
+The message object is defined in "error.proto".  To build the Perl/XS
+wrapper, all you need to do is:
+
+perl Makefile.PL
+make
+make test
+

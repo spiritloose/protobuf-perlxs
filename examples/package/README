@@ -1,0 +1,13 @@
+This is an example of a package (Local::Messages) that contains
+several top-level message types:
+
+Local::Messages::One
+Local::Messages::Two
+Local::Messages::Three
+
+To get this to work, we need to add an XS file and a Perl module
+for the containing package, and execute the bootup code from there.
+The Perl modules for the contained packages are not needed, so they
+are removed after they are generated.  The POD documentation for the
+contained packages is preserved.
+

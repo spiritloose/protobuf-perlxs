@@ -1,0 +1,9 @@
+This is a simple example that tests the protobuf data types.
+
+The message object is defined in "types.proto".  To build the Perl/XS
+wrapper, all you need to do is:
+
+perl Makefile.PL
+make
+make test
+

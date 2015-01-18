@@ -1,0 +1,7 @@
+message Error {
+  required int32  field1 = 1;
+  required string field2 = 2;
+  optional string field3 = 3;
+}
+
+option optimize_for = SPEED;

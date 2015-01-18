@@ -1,0 +1,47 @@
+This is protobuf-perlxs, a Perl/XS code generator for Google's Protocol
+Buffers.  The generated Perl/XS code is meant to be compiled and linked
+with the generated C++ code, and it provides the Perl developer with a
+high performance interface to Protocol Buffer objects.
+
+Each top-level message generates a Perl module, an XS source file, and
+a typemap.  Each top-level enum generates a Perl module and an XS 
+source file.  No typemap is needed for a top-level enum.
+
+If the .proto file specifies a package name, the package name is
+converted to a Perl package prefix like so:
+
+file.proto
+---------------------------
+package foo.bar.baz;
+
+message qux {
+  ...
+}
+
+becomes (in Perl):
+
+Qux.pm
+---------------------------
+package Foo::Bar::Baz::Qux;
+
+Qux.xs
+---------------------------
+#include "file.pb.h"
+
+MODULE = Foo::Bar::Baz::Qux  PACKAGE = Foo::Bar::Baz::Qux
+PROTOTYPES: ENABLE
+
+qux.typemap
+---------------------------
+::foo::bar::baz::qux * T_FOO_BAR_BAZ_QUX
+
+The Perl/XS code generator assumes that the C++ code generator will
+have been run on the same .proto files by the time the sources are to
+be compiled.  It is possible to build a Makefile.PL that compiles the
+generated C++ sources along with the generated XS sources, and it is
+also possible (preferable, in fact) to compile the C++ sources into a
+shared library separately, linking the compiled XS sources with this
+shared library.  In both scenarios, the generated C++ headers need to
+be present in the include path, as they are included by the XS source
+files.
+

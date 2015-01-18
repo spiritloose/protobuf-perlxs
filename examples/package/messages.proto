@@ -1,0 +1,15 @@
+package Local.Messages;
+
+message One {
+  required int32 id1 = 1;
+}
+
+message Two {
+  required int32 id2 = 1;
+}
+
+message Three {
+  required int32 id3 = 1;
+}
+
+option optimize_for = SPEED;

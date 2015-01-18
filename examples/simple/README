@@ -1,0 +1,32 @@
+This is a simple example of how to build a Perl/XS wrapper class that
+works with a Protocol Buffers message object.
+
+The message object is defined in "person.proto", and is taken straight
+from the Protocol Buffers documentation.  To build the Perl/XS wrapper,
+all you need to do is:
+
+perl Makefile.PL
+make
+make test
+
+At this point, you should have generated C++ and Perl/XS sources, and
+those source should have been compiled and tested.  The test script
+creates a Person object and exercises it through its life cycle (by
+setting its fields, serializing it, clearing it, deserializing it
+from the previously serialized string, and getting its fields).  This
+sequence of operations is repeated 10,000 times, and should take less
+than a second.  On an Intel Pentium 4 / 3.20 GHz CPU, it took about
+0.2 seconds.  In contrast, an equivalent C++ program using the same
+generated C++ code ran 120,000 iterations in the same amount of time.
+
+So.  We have a very basic measure of performance.  For this particular
+(very small) protobuf test case, the time required to set object
+fields, serialize the object to a string, clear the object's contents,
+deserialize it from a string, and get field values adds up to around
+20 microseconds total.  Not bad!
+
+Note that the Storable module, which contains one of the standard Perl
+serialization mechanisms, is actually slower than Protocol Buffers in
+this test case.  I found that 10,000 freeze/thaw iterations took about
+3.5 times as long as the Protocol Buffers loop (0.7 seconds).
+

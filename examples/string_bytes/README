@@ -1,0 +1,11 @@
+This example tests packing of messages with string and bytes fields.
+There were two issues (addressed in release 0.7) that lead to the
+creation of this example.  The first issue was that the ZeroCopyStream
+implementation in the generated code was failing to pack messages that
+were a multiple of 8 bytes in length.  The second issue was that if a
+string or bytes field contained embedded NULL characters, everything
+after the first NULL was ignored when packing the field.
+
+perl Makefile.PL
+make
+make test

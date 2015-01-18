@@ -1,0 +1,48 @@
+This is a simple example I made to test the performance of packing and
+unpacking large messages with the ZeroCopyStream enhancements added in
+version 0.6.
+
+After building and installing protoxs:
+
+perl Makefile.PL
+make
+make test
+
+I got the following numbers when comparing protobuf pack/unpack with
+Storable freeze/thaw, without the ZeroCopyStream changes:
+
+PERL_DL_NONLAZY=1 /usr/bin/perl5.8.8 "-Iblib/lib" "-Iblib/arch" test.pl
+0.019845 seconds to set 10 blob fields
+0.047167 seconds to pack message of 20971570 bytes
+0.023046 seconds to unpack packed message
+0.057572 seconds to freeze message of 20971604 bytes
+0.034038 seconds to thaw frozen hashref
+
+These numbers were collected on a quad-core 2.5 GHz Xeon 64-bit box.
+
+One can see that protobuf pack/unpack is faster than freeze/thaw for
+this message type, but the extra data copies that are needed to set
+the blob fields in the message add enough time such that the overall
+execution time to populate and pack the message is slower than the
+time required to freeze the hashref.  With the ZeroCopyStream changes,
+I got the expected ~100% speedup in the performance of packing a large
+message:
+
+PERL_DL_NONLAZY=1 /usr/bin/perl5.8.8 "-Iblib/lib" "-Iblib/arch" test.pl
+0.01985 seconds to set 10 blob fields
+0.023116 seconds to pack message of 20971570 bytes
+0.020175 seconds to unpack packed message
+0.052991 seconds to freeze message of 20971604 bytes
+0.032896 seconds to thaw frozen hashref
+
+One thing that I noticed, but did not investigate in great detail, was
+that the performance of unpack() decreased somewhat when called in a
+loop.  I'm not sure why this is.  For now, I've left the ZeroCopyStream
+change in place, but if you find that it leads to problems, you can
+disable it by uncommenting the NO_ZERO_COPY #define near the top of
+src/google/protobuf/compiler/perlxs/perlxs_generator.cc:
+
+//#define NO_ZERO_COPY 1
+
+This will revert the pack() method to use a StringOutputStream instead.
+

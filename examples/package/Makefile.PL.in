@@ -1,0 +1,30 @@
+use ExtUtils::MakeMaker;
+
+$CC = 'g++';
+
+# Generate the C++, XS, and Perl files that we need.
+
+my $protoxs = "protoxs --cpp_out=. --out=Messages messages.proto";
+
+print "Generating C++ and Perl/XS sources...\n";
+print "$protoxs\n";
+
+`$protoxs`;
+`rm -f Messages/*.pm`;
+`mv Messages/*.xs .`;
+
+# Now write the Makefile.
+
+WriteMakefile(
+	      'NAME'	      => 'Local::Messages',
+	      'VERSION_FROM'  => 'Messages.pm',
+	      'OPTIMIZE'      => '-O2 -Wall',
+              'CC'            => $CC,
+              'LD'            => '$(CC)',
+              'CCFLAGS'       => '-fno-strict-aliasing',
+	      'OBJECT'        => 'messages.pb.o Messages.o One.o Two.o Three.o',
+              'INC'           =>  "@CPPFLAGS@",
+	      'LIBS'          => ["@LDFLAGS@ -lprotobuf"],
+              'XSOPT'         => '-C++',
+	      clean           => { FILES => "Messages/* One.* Two.* Three.* messages.pb.* lib" }
+	     );

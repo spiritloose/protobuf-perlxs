@@ -1,0 +1,16 @@
+This is a simple example of how to build a Perl/XS wrapper class that
+works with a Protocol Buffers message object that has embedded message
+types.
+
+The message object is defined in "error.proto", and is an example of
+what one might like to know about a runtime error that occurs in an
+Apache/mod_perl environment.  To build the Perl/XS wrapper, all you 
+need to do is:
+
+perl Makefile.PL
+make
+make test
+
+At this point, you should have generated C++ and Perl/XS sources, and
+those source should have been compiled and tested.  The test script
+creates an Error object and exercises it through its life cycle.

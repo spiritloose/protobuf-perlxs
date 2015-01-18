@@ -1,0 +1,8 @@
+package String;
+
+message Bytes {
+  optional string v_string = 1;
+  optional bytes  v_bytes  = 2;
+}
+
+option optimize_for = SPEED;

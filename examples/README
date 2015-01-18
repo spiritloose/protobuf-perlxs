@@ -1,0 +1,6 @@
+This directory contains examples that illustate the use of Protocol
+Buffers with Perl.  The easiest way to run the examples is as follows:
+
+1) Build and install protoxs
+2) In each example directory, follow the instructions in the README.
+
