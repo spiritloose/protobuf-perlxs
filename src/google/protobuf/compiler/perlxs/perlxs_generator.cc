@@ -118,55 +118,6 @@ PerlXSGenerator::GenerateMessageXS(const Descriptor* descriptor,
 		"base",
 		base);
 
-  // ZeroCopyOutputStream implementation (for improved pack() performance)
-
-  printer.Print("class $base$_OutputStream :\n"
-		"  public google::protobuf::io::ZeroCopyOutputStream {\n"
-		"public:\n"
-		"  explicit $base$_OutputStream(SV * sv) :\n"
-		"  sv_(sv), len_(0) {}\n"
-		"  ~$base$_OutputStream() {}\n"
-		"\n"
-		"  bool Next(void** data, int* size)\n"
-		"  {\n"
-		"    STRLEN nlen = len_ << 1;\n"
-		"\n"
-		"    if ( nlen < 16 ) nlen = 16;\n"
-		"    SvGROW(sv_, nlen);\n"
-		"    *data = SvEND(sv_) + len_;\n"
-		"    *size = SvLEN(sv_) - len_;\n"
-		"    len_ = nlen;\n"
-		"\n"
-		"    return true;\n"
-		"  }\n"
-		"\n"
-		"  void BackUp(int count)\n"
-		"  {\n"
-		"    SvCUR_set(sv_, SvLEN(sv_) - count);\n"
-		"  }\n"
-		"\n"
-		"  void Sync() {\n"
-		"    if ( SvCUR(sv_) == 0 ) {\n"
-		"      SvCUR_set(sv_, len_);\n"
-		"    }\n"
-		"  }\n"
-		"\n"
-		"  int64_t ByteCount() const\n"
-		"  {\n"
-		"    return (int64_t)SvCUR(sv_);\n"
-		"  }\n"
-		"\n"
-		"private:\n"
-		"  SV * sv_;\n"
-		"  STRLEN len_;\n"
-		"\n"
-		"  GOOGLE_DISALLOW_EVIL_CONSTRUCTORS($base$_OutputStream);\n"
-		"};\n"
-		"\n"
-		"\n",
-		"base",
-		base);
-
   // Typedefs, Statics, and XS packages
 
   set<const Descriptor*> seen;
@@ -1268,13 +1219,10 @@ PerlXSGenerator::GenerateMessageXSCommonMethods(const Descriptor* descriptor,
 		"pack(svTHIS)\n"
 		"  SV * svTHIS\n");
 
-  // This may be controlled by a custom option at some point.
-#if NO_ZERO_COPY
   printer.Print(vars,
 		"  PREINIT:\n"
 		"    string output;\n"
 		"\n");
-#endif
 
   printer.Print(vars,
 		"  CODE:\n");
@@ -1285,15 +1233,12 @@ PerlXSGenerator::GenerateMessageXSCommonMethods(const Descriptor* descriptor,
   vars["base"] = cpp::StripProto(descriptor->file()->name());
 
   printer.Print(vars,
-		"      RETVAL = newSVpvn(\"\", 0);\n"
-		"      $base$_OutputStream os(RETVAL);\n"
 		"      if ( THIS->IsInitialized() ) {\n"
-		"        if ( THIS->SerializePartialToZeroCopyStream(&os)"
+		"        if ( THIS->SerializePartialToString(&output)"
 		"!= true ) {\n"
-		"          SvREFCNT_dec(RETVAL);\n"
 		"          RETVAL = Nullsv;\n"
 		"        } else {\n"
-		"          os.Sync();\n"
+		"          RETVAL = newSVpvn(output.c_str(), output.length());\n"
 		"        }\n"
 		"      } else {\n"
 		"        croak(\"Can't serialize message of type "
