@@ -17,7 +17,6 @@ EXTRA_DIST = \
 	examples/package/Makefile.PL.in \
 	examples/package/Messages.pm \
 	examples/package/Messages.xs \
-	examples/package/Messages \
 	examples/package/messages.proto \
 	examples/package/README \
 	examples/package/test.pl \
