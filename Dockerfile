@@ -1,8 +1,8 @@
 # Example: $ docker run --rm -v $(pwd)/examples/simple:/proto -it protobuf-perlxs \
 #                sh -c 'cd /proto && protoxs --cpp_out=. --out=. person.proto'
-FROM debian:stretch
+FROM debian:buster
 
-RUN apt-get update && apt-get install -y autoconf automake make g++ libprotoc-dev \
+RUN apt-get update && apt-get install -y autoconf autoconf-archive automake make g++ libprotoc-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

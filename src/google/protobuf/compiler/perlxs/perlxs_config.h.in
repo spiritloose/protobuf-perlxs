@@ -8,7 +8,7 @@ namespace protobuf {
 namespace compiler {
 namespace perlxs {
 
- const string PackageString = "@PACKAGE_STRING@";
+ const std::string PackageString = "@PACKAGE_STRING@";
 
 }  // namespace perlxs
 }  // namespace compiler

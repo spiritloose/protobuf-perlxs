@@ -14,11 +14,11 @@ namespace compiler {
 namespace perlxs {
 
 void
-SetupDepthVars(map<string, string>& vars, int depth)
+SetupDepthVars(std::map<string, string>& vars, int depth)
 {
-  ostringstream ost_pdepth;
-  ostringstream ost_depth;
-  ostringstream ost_ndepth;
+  std::ostringstream ost_pdepth;
+  std::ostringstream ost_depth;
+  std::ostringstream ost_ndepth;
 
   ost_pdepth << depth;
   ost_depth  << depth + 1;

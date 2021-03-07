@@ -21,9 +21,9 @@ PerlXSGenerator::~PerlXSGenerator() {}
   
 bool
 PerlXSGenerator::Generate(const FileDescriptor* file,
-			  const string& parameter,
+			  const std::string& parameter,
 			  OutputDirectory* outdir,
-			  string* error) const 
+			  std::string* error) const
 {
   // Each top-level message get its own XS source file, Perl module,
   // and typemap.  Each top-level enum gets its own Perl module.  The
@@ -46,20 +46,20 @@ PerlXSGenerator::Generate(const FileDescriptor* file,
   return true;
 }
 
-const string&
+const std::string&
 PerlXSGenerator::GetVersionInfo() const
 {
     return PackageString;
 }
 
 bool
-PerlXSGenerator::ProcessOption(const string& option)
+PerlXSGenerator::ProcessOption(const std::string& option)
 {
   size_t equals;
   bool   recognized = false;
 
   equals = option.find_first_of('=');
-  if (equals != string::npos) {
+  if (equals != std::string::npos) {
     std::string name = option.substr(0, equals);
     std::string value;
 
@@ -81,11 +81,11 @@ void
 PerlXSGenerator::GenerateMessageXS(const Descriptor* descriptor,
 				   OutputDirectory* outdir) const
 {
-  string filename = descriptor->name() + ".xs";
-  scoped_ptr<io::ZeroCopyOutputStream> output(outdir->Open(filename));
+  std::string filename = descriptor->name() + ".xs";
+  std::unique_ptr<io::ZeroCopyOutputStream> output(outdir->Open(filename));
   io::Printer printer(output.get(), '$'); // '$' works well in the .xs file
 
-  string base = cpp::StripProto(descriptor->file()->name());
+  std::string base = cpp::StripProto(descriptor->file()->name());
 
   // Boilerplate at the top of the file.
 
@@ -107,20 +107,21 @@ PerlXSGenerator::GenerateMessageXS(const Descriptor* descriptor,
 		"#ifdef New\n"
 		"#undef New\n"
 		"#endif\n"
+		"#ifdef Move\n"
+		"#undef Move\n"
+		"#endif\n"
 		"#include <stdint.h>\n"
 		"#include <sstream>\n"
 		"#include <google/protobuf/stubs/common.h>\n"
 		"#include <google/protobuf/io/zero_copy_stream.h>\n"
 		"#include \"$base$.pb.h\"\n"
-		"\n"
-		"using namespace std;\n"
 		"\n",
 		"base",
 		base);
 
   // Typedefs, Statics, and XS packages
 
-  set<const Descriptor*> seen;
+  std::set<const Descriptor*> seen;
 
   GenerateFileXSTypedefs(descriptor->file(), printer, seen);
 
@@ -138,11 +139,11 @@ void
 PerlXSGenerator::GenerateMessageModule(const Descriptor* descriptor,
 				       OutputDirectory* outdir) const
 {
-  string filename = descriptor->name() + ".pm";
-  scoped_ptr<io::ZeroCopyOutputStream> output(outdir->Open(filename));
+  std::string filename = descriptor->name() + ".pm";
+  std::unique_ptr<io::ZeroCopyOutputStream> output(outdir->Open(filename));
   io::Printer printer(output.get(), '*'); // '*' works well in the .pm file
 
-  map<string, string> vars;
+  std::map<std::string, std::string> vars;
 
   vars["package"] = MessageModuleName(descriptor);
   vars["message"] = descriptor->full_name();
@@ -177,11 +178,11 @@ void
 PerlXSGenerator::GenerateMessagePOD(const Descriptor* descriptor,
 				    OutputDirectory* outdir) const
 {
-  string filename = descriptor->name() + ".pod";
-  scoped_ptr<io::ZeroCopyOutputStream> output(outdir->Open(filename));
+  std::string filename = descriptor->name() + ".pod";
+  std::unique_ptr<io::ZeroCopyOutputStream> output(outdir->Open(filename));
   io::Printer printer(output.get(), '*'); // '*' works well in the .pod file
 
-  map<string, string> vars;
+  std::map<std::string, std::string> vars;
 
   vars["package"] = MessageModuleName(descriptor);
   vars["message"] = descriptor->full_name();
@@ -313,7 +314,7 @@ PerlXSGenerator::GenerateDescriptorMethodPOD(const Descriptor* descriptor,
 
   // Constructor
 
-  map<string, string> vars;
+  std::map<std::string, std::string> vars;
 
   vars["name"]  = MessageClassName(descriptor);
   vars["value"] = descriptor->name();
@@ -500,11 +501,11 @@ void
 PerlXSGenerator::GenerateEnumModule(const EnumDescriptor* enum_descriptor,
 				    OutputDirectory* outdir) const
 {
-  string filename = enum_descriptor->name() + ".pm";
-  scoped_ptr<io::ZeroCopyOutputStream> output(outdir->Open(filename));
+  std::string filename = enum_descriptor->name() + ".pm";
+  std::unique_ptr<io::ZeroCopyOutputStream> output(outdir->Open(filename));
   io::Printer printer(output.get(), '*'); // '*' works well in the .pm file
 
-  map<string, string> vars;
+  std::map<std::string, std::string> vars;
 
   vars["package"] = EnumClassName(enum_descriptor);
   vars["enum"]    = enum_descriptor->full_name();
@@ -519,7 +520,7 @@ PerlXSGenerator::GenerateEnumModule(const EnumDescriptor* enum_descriptor,
   // Each enum value is exported as a constant.
 
   for ( int i = 0; i < enum_descriptor->value_count(); i++ ) {
-    ostringstream ost;
+    std::ostringstream ost;
     ost << enum_descriptor->value(i)->number();
     printer.Print("use constant *value* => *number*;\n",
 		  "value", enum_descriptor->value(i)->name(),
@@ -585,7 +586,7 @@ PerlXSGenerator::GenerateEnumModule(const EnumDescriptor* enum_descriptor,
 void
 PerlXSGenerator::GenerateFileXSTypedefs(const FileDescriptor* file,
 					io::Printer& printer,
-					set<const Descriptor*>& seen) const
+					std::set<const Descriptor*>& seen) const
 {
   for ( int i = 0; i < file->dependency_count(); i++ ) {
     GenerateFileXSTypedefs(file->dependency(i), printer, seen);
@@ -600,15 +601,15 @@ PerlXSGenerator::GenerateFileXSTypedefs(const FileDescriptor* file,
 void
 PerlXSGenerator::GenerateMessageXSTypedefs(const Descriptor* descriptor,
 					   io::Printer& printer,
-					   set<const Descriptor*>& seen) const
+					   std::set<const Descriptor*>& seen) const
 {
   for ( int i = 0; i < descriptor->nested_type_count(); i++ ) {
     GenerateMessageXSTypedefs(descriptor->nested_type(i), printer, seen);
   }
 
   if ( seen.find(descriptor) == seen.end() ) {
-    string cn = cpp::ClassName(descriptor, true);
-    string un = StringReplace(cn, "::", "__", true);
+    std::string cn = QualifiedClassName(descriptor);
+    std::string un = StringReplace(cn, "::", "__", true);
 
     seen.insert(descriptor);
     printer.Print("typedef $classname$ $underscores$;\n",
@@ -626,10 +627,10 @@ PerlXSGenerator::GenerateMessageStatics(const Descriptor* descriptor,
     GenerateMessageStatics(descriptor->nested_type(i), printer);
   }
 
-  map<string, string> vars;
+  std::map<std::string, std::string> vars;
 
-  string cn = cpp::ClassName(descriptor, true);
-  string un = StringReplace(cn, "::", "__", true);
+  std::string cn = QualifiedClassName(descriptor);
+  std::string un = StringReplace(cn, "::", "__", true);
 
   vars["depth"]       = "0";
   vars["fieldtype"]   = cn;
@@ -659,14 +660,14 @@ PerlXSGenerator::GenerateMessageStatics(const Descriptor* descriptor,
 void
 PerlXSGenerator::GenerateMessageXSFieldAccessors(const FieldDescriptor* field,
 						 io::Printer& printer,
-						 const string& classname) const
+						 const std::string& classname) const
 {
   const Descriptor* descriptor = field->containing_type();
-  string            cppname    = cpp::FieldName(field);
-  string            perlclass  = MessageClassName(descriptor);
+  std::string       cppname    = cpp::FieldName(field);
+  std::string       perlclass  = MessageClassName(descriptor);
   bool              repeated   = field->is_repeated();
 
-  map<string, string> vars;
+  std::map<std::string, std::string> vars;
 
   vars["classname"] = classname;
   vars["cppname"]   = cppname;
@@ -677,7 +678,7 @@ PerlXSGenerator::GenerateMessageXSFieldAccessors(const FieldDescriptor* field,
   FieldDescriptor::Type    type      = field->type();
 
   if ( fieldtype == FieldDescriptor::CPPTYPE_MESSAGE ) {
-    vars["fieldtype"]  = cpp::ClassName(field->message_type(), true);
+    vars["fieldtype"]  = QualifiedClassName(field->message_type());
     vars["fieldclass"] = MessageClassName(field->message_type());
   }
 
@@ -764,7 +765,7 @@ PerlXSGenerator::GenerateMessageXSFieldAccessors(const FieldDescriptor* field,
 
   if ( fieldtype == FieldDescriptor::CPPTYPE_INT64 ||
        fieldtype == FieldDescriptor::CPPTYPE_UINT64 ) {
-    printer.Print("    ostringstream ost;\n");
+    printer.Print("    std::ostringstream ost;\n");
   }
 
   if ( fieldtype == FieldDescriptor::CPPTYPE_MESSAGE ) {
@@ -849,7 +850,7 @@ PerlXSGenerator::GenerateMessageXSFieldAccessors(const FieldDescriptor* field,
 
   switch ( fieldtype ) {
   case FieldDescriptor::CPPTYPE_ENUM:
-    vars["etype"] = cpp::ClassName(field->enum_type(), true);
+    vars["etype"] = QualifiedClassName(field->enum_type());
     // Fall through
   case FieldDescriptor::CPPTYPE_INT32:
   case FieldDescriptor::CPPTYPE_BOOL:
@@ -900,7 +901,7 @@ PerlXSGenerator::GenerateMessageXSFieldAccessors(const FieldDescriptor* field,
 		  "    STRLEN len;\n");
     if ( type == FieldDescriptor::TYPE_STRING ) {
       printer.Print(vars,
-		    "    string $value$;\n");
+		    "    std::string $value$;\n");
     }
     printer.Print("\n"
 		  "  CODE:\n");
@@ -984,14 +985,14 @@ PerlXSGenerator::GenerateMessageXSFieldAccessors(const FieldDescriptor* field,
 void
 PerlXSGenerator::GenerateMessageXSCommonMethods(const Descriptor* descriptor,
 						io::Printer& printer,
-						const string& classname) const
+						const std::string& classname) const
 {
-  map<string, string> vars;
+  std::map<string, std::string> vars;
 #if (GOOGLE_PROTOBUF_VERSION >= 2002000)
   FileOptions::OptimizeMode mode;
 #endif // GOOGLE_PROTOBUF_VERSION
-  string cn = cpp::ClassName(descriptor, true);
-  string un = StringReplace(cn, "::", "__", true);
+  std::string cn = QualifiedClassName(descriptor);
+  std::string un = StringReplace(cn, "::", "__", true);
 
 #if (GOOGLE_PROTOBUF_VERSION >= 2002000)
   mode = descriptor->file()->options().optimize_for();
@@ -1099,7 +1100,7 @@ PerlXSGenerator::GenerateMessageXSCommonMethods(const Descriptor* descriptor,
 		"error_string(svTHIS)\n"
 		"  SV * svTHIS\n"
 		"  PREINIT:\n"
-		"    string estr;\n"
+		"    std::string estr;\n"
 		"\n"
 		"  CODE:\n");
   GenerateTypemapInput(descriptor, printer, "THIS");
@@ -1142,7 +1143,7 @@ PerlXSGenerator::GenerateMessageXSCommonMethods(const Descriptor* descriptor,
 		  "debug_string(svTHIS)\n"
 		  "  SV * svTHIS\n"
 		  "  PREINIT:\n"
-		  "    string dstr;\n"
+		  "    std::string dstr;\n"
 		  "\n"
 		  "  CODE:\n");
     GenerateTypemapInput(descriptor, printer, "THIS");
@@ -1164,7 +1165,7 @@ PerlXSGenerator::GenerateMessageXSCommonMethods(const Descriptor* descriptor,
 		  "short_debug_string(svTHIS)\n"
 		  "  SV * svTHIS\n"
 		  "  PREINIT:\n"
-		  "    string dstr;\n"
+		  "    std::string dstr;\n"
 		  "\n"
 		  "  CODE:\n");
     GenerateTypemapInput(descriptor, printer, "THIS");
@@ -1221,7 +1222,7 @@ PerlXSGenerator::GenerateMessageXSCommonMethods(const Descriptor* descriptor,
 
   printer.Print(vars,
 		"  PREINIT:\n"
-		"    string output;\n"
+		"    std::string output;\n"
 		"\n");
 
   printer.Print(vars,
@@ -1278,7 +1279,7 @@ PerlXSGenerator::GenerateMessageXSCommonMethods(const Descriptor* descriptor,
 
   // fields
 
-  ostringstream field_count;
+  std::ostringstream field_count;
 
   field_count << descriptor->field_count();
   vars["field_count"] = field_count.str();
@@ -1344,12 +1345,12 @@ PerlXSGenerator::GenerateMessageXSPackage(const Descriptor* descriptor,
     GenerateMessageXSPackage(descriptor->nested_type(i), printer);
   }
 
-  map<string, string> vars;
+  std::map<std::string, std::string> vars;
 
-  string cn = cpp::ClassName(descriptor, true);
-  string mn = MessageModuleName(descriptor);
-  string pn = MessageClassName(descriptor);
-  string un = StringReplace(cn, "::", "__", true);
+  std::string cn = QualifiedClassName(descriptor);
+  std::string mn = MessageModuleName(descriptor);
+  std::string pn = MessageClassName(descriptor);
+  std::string un = StringReplace(cn, "::", "__", true);
 
   vars["module"]      = mn;
   vars["classname"]   = cn;
@@ -1460,11 +1461,11 @@ PerlXSGenerator::GenerateMessageXSPackage(const Descriptor* descriptor,
 void
 PerlXSGenerator::GenerateTypemapInput(const Descriptor* descriptor,
 				      io::Printer& printer,
-				      const string& svname) const
+				      const std::string& svname) const
 {
-  map<string, string> vars;
+  std::map<std::string, std::string> vars;
 
-  string cn = cpp::ClassName(descriptor, true);
+  std::string cn = QualifiedClassName(descriptor);
 
   vars["classname"]   = cn;
   vars["perlclass"]   = MessageClassName(descriptor);
@@ -1481,9 +1482,30 @@ PerlXSGenerator::GenerateTypemapInput(const Descriptor* descriptor,
 		"    }\n");
 }
 
+static std::string
+QualifiedFileLevelSymbol(const FileDescriptor* file, const std::string& name)
+{
+  if (file->package().empty()) {
+    return "::" + name;
+  }
+  return "::" + StringReplace(file->package(), ".", "::", true) + "::" + name;
+}
+
+std::string
+PerlXSGenerator::QualifiedClassName(const Descriptor* d) const
+{
+  return QualifiedFileLevelSymbol(d->file(), cpp::ClassName(d));
+}
+
+std::string
+PerlXSGenerator::QualifiedClassName(const EnumDescriptor* d) const
+{
+  return QualifiedFileLevelSymbol(d->file(), cpp::ClassName(d));
+}
+
 // Returns the containing Perl module name for a message descriptor.
 
-string
+std::string
 PerlXSGenerator::MessageModuleName(const Descriptor* descriptor) const
 {
   const Descriptor *container = descriptor;
@@ -1497,7 +1519,7 @@ PerlXSGenerator::MessageModuleName(const Descriptor* descriptor) const
 
 // Returns the Perl class name for a message descriptor.
 
-string
+std::string
 PerlXSGenerator::MessageClassName(const Descriptor* descriptor) const
 {
   return PackageName(descriptor->full_name(), descriptor->file()->package());
@@ -1505,7 +1527,7 @@ PerlXSGenerator::MessageClassName(const Descriptor* descriptor) const
 
 // Returns the Perl class name for a message descriptor.
 
-string
+std::string
 PerlXSGenerator::EnumClassName(const EnumDescriptor* descriptor) const
 {
   return PackageName(descriptor->full_name(), descriptor->file()->package());
@@ -1513,10 +1535,10 @@ PerlXSGenerator::EnumClassName(const EnumDescriptor* descriptor) const
 
 // Possibly replace the package prefix with the --perlxs-package value
 
-string
-PerlXSGenerator::PackageName(const string& name, const string& package) const
+std::string
+PerlXSGenerator::PackageName(const std::string& name, const std::string& package) const
 {
-  string output;
+  std::string output;
 
   if (!perlxs_package_.empty()) {
     output = StringReplace(name, package, perlxs_package_, false);
@@ -1530,7 +1552,7 @@ PerlXSGenerator::PackageName(const string& name, const string& package) const
 
 void
 PerlXSGenerator::PerlSVGetHelper(io::Printer& printer,
-				 const map<string, string>& vars,
+				 const std::map<string, string>& vars,
 				 FieldDescriptor::CppType fieldtype,
 				 int depth) const
 {
@@ -1589,7 +1611,7 @@ void
 PerlXSGenerator::PODPrintEnumValue(const EnumValueDescriptor *value,
 				   io::Printer& printer) const
 {
-  ostringstream ost;
+  std::ostringstream ost;
   printer.Print("=item B<*value*>\n"
 		"\n",
 		"value", value->name());
@@ -1599,10 +1621,10 @@ PerlXSGenerator::PODPrintEnumValue(const EnumValueDescriptor *value,
 		"number", ost.str());
 }
 
-string
+std::string
 PerlXSGenerator::PODFieldTypeString(const FieldDescriptor* field) const
 {
-  string type;
+  std::string type;
 
   switch ( field->cpp_type() ) {
   case FieldDescriptor::CPPTYPE_INT32:
@@ -1644,7 +1666,7 @@ PerlXSGenerator::PODFieldTypeString(const FieldDescriptor* field) const
 void
 PerlXSGenerator::StartFieldToHashref(const FieldDescriptor * field,
 				     io::Printer& printer,
-				     map<string, string>& vars,
+				     std::map<std::string, std::string>& vars,
 				     int depth) const
 {
   SetupDepthVars(vars, depth);
@@ -1670,7 +1692,7 @@ PerlXSGenerator::StartFieldToHashref(const FieldDescriptor * field,
 
 void
 PerlXSGenerator::FieldToHashrefHelper(io::Printer& printer,
-				      map<string, string>& vars,
+				      std::map<std::string, std::string>& vars,
 				      const FieldDescriptor* field) const
 {
   vars["msg"] = "msg" + vars["pdepth"];
@@ -1699,7 +1721,7 @@ PerlXSGenerator::FieldToHashrefHelper(io::Printer& printer,
   case FieldDescriptor::CPPTYPE_INT64:
   case FieldDescriptor::CPPTYPE_UINT64:
     printer.Print(vars,
-		  "ostringstream ost$pdepth$;\n"
+		  "std::ostringstream ost$pdepth$;\n"
 		  "\n"
 		  "ost$pdepth$ << $msg$->$cppname$($i$);\n"
 		  "SV * $sv$ = newSVpv(ost$pdepth$.str().c_str(),"
@@ -1719,7 +1741,7 @@ PerlXSGenerator::FieldToHashrefHelper(io::Printer& printer,
 void
 PerlXSGenerator::EndFieldToHashref(const FieldDescriptor * field,
 				   io::Printer& printer,
-				   map<string, string>& vars,
+				   std::map<std::string, std::string>& vars,
 				   int depth) const
 {
   vars["field"] = field->name();
@@ -1752,7 +1774,7 @@ PerlXSGenerator::EndFieldToHashref(const FieldDescriptor * field,
 void
 PerlXSGenerator::MessageToHashref(const Descriptor * descriptor,
 				  io::Printer& printer,
-				  map<string, string>& vars,
+				  std::map<std::string, std::string>& vars,
 				  int depth) const
 {
   int i;
@@ -1769,7 +1791,7 @@ PerlXSGenerator::MessageToHashref(const Descriptor * descriptor,
     StartFieldToHashref(field, printer, vars, depth);
 
     if ( fieldtype == FieldDescriptor::CPPTYPE_MESSAGE ) {
-      vars["fieldtype"] = cpp::ClassName(field->message_type(), true);
+      vars["fieldtype"] = QualifiedClassName(field->message_type());
       printer.Print(vars,
 		    "$fieldtype$ * msg$ndepth$ = msg$pdepth$->"
 		    "mutable_$cppname$($i$);\n"
@@ -1788,7 +1810,7 @@ PerlXSGenerator::MessageToHashref(const Descriptor * descriptor,
 
 void
 PerlXSGenerator::FieldFromHashrefHelper(io::Printer& printer,
-					map<string, string>& vars,
+					std::map<std::string, std::string>& vars,
 					const FieldDescriptor * field) const
 {
   vars["msg"] = "msg" + vars["pdepth"];
@@ -1807,7 +1829,7 @@ PerlXSGenerator::FieldFromHashrefHelper(io::Printer& printer,
 		  "$msg$->$do$_$cppname$(SvIV($var$));\n");
     break;
   case FieldDescriptor::CPPTYPE_ENUM:
-    vars["etype"] = cpp::ClassName(field->enum_type(), true);
+    vars["etype"] = QualifiedClassName(field->enum_type());
     printer.Print(vars,
 		  "$msg$->$do$_$cppname$"
 		  "(($etype$)SvIV($var$));\n");
@@ -1840,7 +1862,7 @@ PerlXSGenerator::FieldFromHashrefHelper(io::Printer& printer,
 		  "char * str;\n");
 
     if ( field->type() == FieldDescriptor::TYPE_STRING ) {
-      printer.Print("string sval;\n");
+      printer.Print("std::string sval;\n");
     }
 
     printer.Print(vars,
@@ -1868,7 +1890,7 @@ PerlXSGenerator::FieldFromHashrefHelper(io::Printer& printer,
 void
 PerlXSGenerator::MessageFromHashref(const Descriptor * descriptor,
 				    io::Printer& printer,
-				    map<string, string>& vars,
+				    std::map<std::string, std::string>& vars,
 				    int depth) const
 {
   int i;
@@ -1893,7 +1915,7 @@ PerlXSGenerator::MessageFromHashref(const Descriptor * descriptor,
     vars["cppname"] = cpp::FieldName(field);
 
     if ( field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE ) {
-      vars["fieldtype"] = cpp::ClassName(field->message_type(), true);
+      vars["fieldtype"] = QualifiedClassName(field->message_type());
     }
 
     printer.Print(vars,
