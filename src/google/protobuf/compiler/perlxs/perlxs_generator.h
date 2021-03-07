@@ -28,11 +28,10 @@ namespace compiler {
 // function prototypes here.
 
 namespace cpp {
-  extern string ClassName(const Descriptor* descriptor, bool qualified);
-  extern string ClassName(const EnumDescriptor* enum_descriptor, 
-			  bool qualified);
-  extern string FieldName(const FieldDescriptor* field);
-  extern string StripProto(const string& filename);
+  extern std::string ClassName(const Descriptor* d);
+  extern std::string ClassName(const EnumDescriptor* d);
+  extern std::string FieldName(const FieldDescriptor* field);
+  extern std::string StripProto(const std::string& filename);
 }
 
 namespace perlxs {
@@ -49,12 +48,12 @@ class LIBPROTOC_EXPORT PerlXSGenerator : public CodeGenerator {
 
   // implements CodeGenerator ----------------------------------------
   virtual bool Generate(const FileDescriptor* file,
-			const string& parameter,
+			const std::string& parameter,
 			OutputDirectory* output_directory,
-			string* error) const;
+			std::string* error) const;
   
-  const string& GetVersionInfo() const;
-  bool ProcessOption(const string& option);
+  const std::string& GetVersionInfo() const;
+  bool ProcessOption(const std::string& option);
 
  private:
   GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(PerlXSGenerator);
@@ -62,7 +61,7 @@ class LIBPROTOC_EXPORT PerlXSGenerator : public CodeGenerator {
  private:
   void GenerateXS(const FileDescriptor* file,
 		  OutputDirectory* output_directory,
-		  string& base) const;
+		  std::string& base) const;
 
   void GenerateMessageXS(const Descriptor* descriptor,
 			 OutputDirectory* outdir) const;
@@ -84,19 +83,19 @@ class LIBPROTOC_EXPORT PerlXSGenerator : public CodeGenerator {
   
   void GenerateMessageXSFieldAccessors(const FieldDescriptor* field,
 				       io::Printer& printer,
-				       const string& classname) const;
+				       const std::string& classname) const;
 
   void GenerateMessageXSCommonMethods(const Descriptor* descriptor,
 				      io::Printer& printer,
-				      const string& classname) const;
+				      const std::string& classname) const;
 
   void GenerateFileXSTypedefs(const FileDescriptor* file,
 			      io::Printer& printer,
-			      set<const Descriptor*>& seen) const;
+			      std::set<const Descriptor*>& seen) const;
 
   void GenerateMessageXSTypedefs(const Descriptor* descriptor,
 				 io::Printer& printer,
-				 set<const Descriptor*>& seen) const;
+				 std::set<const Descriptor*>& seen) const;
 
   void GenerateMessageStatics(const Descriptor* descriptor,
 			      io::Printer& printer) const;
@@ -106,52 +105,56 @@ class LIBPROTOC_EXPORT PerlXSGenerator : public CodeGenerator {
 
   void GenerateTypemapInput(const Descriptor* descriptor,
 			    io::Printer& printer,
-			    const string& svname) const;
+			    const std::string& svname) const;
 
-  string MessageModuleName(const Descriptor* descriptor) const;
+  std::string QualifiedClassName(const Descriptor* d) const;
 
-  string MessageClassName(const Descriptor* descriptor) const;
+  std::string QualifiedClassName(const EnumDescriptor* d) const;
 
-  string EnumClassName(const EnumDescriptor* descriptor) const;
+  std::string MessageModuleName(const Descriptor* descriptor) const;
 
-  string PackageName(const string& name, const string& package) const;
+  std::string MessageClassName(const Descriptor* descriptor) const;
+
+  std::string EnumClassName(const EnumDescriptor* descriptor) const;
+
+  std::string PackageName(const std::string& name, const std::string& package) const;
 
   void PerlSVGetHelper(io::Printer& printer,
-		       const map<string, string>& vars,
+		       const std::map<std::string, std::string>& vars,
 		       FieldDescriptor::CppType fieldtype,
 		       int depth) const;
 
   void PODPrintEnumValue(const EnumValueDescriptor *value,
 			 io::Printer& printer) const;
 
-  string PODFieldTypeString(const FieldDescriptor* field) const;
+  std::string PODFieldTypeString(const FieldDescriptor* field) const;
 
   void StartFieldToHashref(const FieldDescriptor * field,
 			   io::Printer& printer,
-			   map<string, string>& vars,
+			   std::map<std::string, std::string>& vars,
 			   int depth) const;
 
   void FieldToHashrefHelper(io::Printer& printer,
-			    map<string, string>& vars,
+			    std::map<std::string, std::string>& vars,
 			    const FieldDescriptor* field) const;
 
   void EndFieldToHashref(const FieldDescriptor * field,
 			 io::Printer& printer,
-			 map<string, string>& vars,
+			 std::map<std::string, std::string>& vars,
 			 int depth) const;
 
   void MessageToHashref(const Descriptor * descriptor,
 			io::Printer& printer,
-			map<string, string>& vars,
+			std::map<std::string, std::string>& vars,
 			int depth) const;
 
   void FieldFromHashrefHelper(io::Printer& printer,
-			      map<string, string>& vars,
+			      std::map<std::string, std::string>& vars,
 			      const FieldDescriptor * field) const;
 
   void MessageFromHashref(const Descriptor * descriptor,
 			  io::Printer& printer,
-			  map<string, string>& vars,
+			  std::map<std::string, std::string>& vars,
 			  int depth) const;
 
  private:

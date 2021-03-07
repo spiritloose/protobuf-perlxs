@@ -1,0 +1,21 @@
+name: test
+on: [push, pull_request]
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: ['ubuntu-20.04']
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install libraries
+        run: |
+          sudo apt update
+          sudo apt install -y autoconf autoconf-archive automake make g++ libprotoc-dev
+      - run: aclocal
+      - run: automake --add-missing
+      - run: autoconf
+      - run: ./configure
+      - run: make
+      - run: ./src/protoxs --version

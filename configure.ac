@@ -2,6 +2,7 @@ AC_INIT([protobuf-perlxs], [1.1], [dave@daveb.net])
 AM_INIT_AUTOMAKE([-Wall])
 AC_LANG([C++])
 AC_PROG_CXX
+AX_CXX_COMPILE_STDCXX([11], [noext], [mandatory])
 AC_PROG_CC
 AC_PROG_INSTALL
 
