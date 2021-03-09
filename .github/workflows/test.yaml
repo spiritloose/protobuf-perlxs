@@ -26,5 +26,4 @@ jobs:
       - run: make dist
       - uses: actions/upload-artifact@v2
         with:
-          name: release tarball
           path: protobuf-perlxs-*.tar.gz
