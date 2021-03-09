@@ -23,3 +23,8 @@ jobs:
       - run: ./configure
       - run: make
       - run: ./src/protoxs --version
+      - run: make dist
+      - uses: actions/upload-artifact@v2
+        with:
+          name: release tarball
+          path: protobuf-perlxs-*.tar.gz

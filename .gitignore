@@ -18,3 +18,4 @@ Makefile.in
 /examples/*/Makefile.PL
 /src/google/protobuf/compiler/perlxs/perlxs_config.h
 /src/protoxs
+/protobuf-perlxs-*.tar.gz
