@@ -8,9 +8,8 @@ namespace google {
 namespace protobuf {
 
 extern std::string StringReplace(const std::string& s,
-				 const std::string& oldsub,
-				 const std::string& newsub,
-				 bool replace_all);
+                                 const std::string& oldsub,
+                                 const std::string& newsub, bool replace_all);
 
 namespace compiler {
 namespace perlxs {
