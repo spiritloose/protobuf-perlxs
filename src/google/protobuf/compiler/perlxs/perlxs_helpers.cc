@@ -3,7 +3,6 @@
 #include <google/protobuf/io/printer.h>
 
 #include <sstream>
-#include <vector>
 
 namespace google {
 namespace protobuf {
