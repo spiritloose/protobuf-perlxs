@@ -9,6 +9,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
+      - uses: DoozyX/clang-format-lint-action@v0.11
+        with:
+          clangFormatVersion: 11
+          source: './src'
       - name: Install libraries
         run: |
           sudo apt update
