@@ -1,0 +1,28 @@
+use ExtUtils::MakeMaker;
+
+$CC = 'g++';
+
+# Generate the C++, XS, and Perl files that we need.
+
+my $protoxs = "protoxs --cpp_out=. --out=. person.proto";
+
+print "Generating C++ and Perl/XS sources...\n";
+print "$protoxs\n";
+
+`$protoxs`;
+
+# Now write the Makefile.
+
+WriteMakefile(
+	      'NAME'	      => 'Person',
+	      'VERSION_FROM'  => 'Person.pm',
+	      'OPTIMIZE'      => '-O2 -Wall',
+              'CC'            => $CC,
+              'LD'            => '$(CC)',
+              'CCFLAGS'       => '-fno-strict-aliasing',
+	      'OBJECT'        => 'person.pb.o Person.o',
+              'INC'           =>  "@CPPFLAGS@",
+	      'LIBS'          => ["@LDFLAGS@ -lprotobuf"],
+              'XSOPT'         => '-C++',
+	      clean           => { FILES => "Person.* person.pb.* lib" }
+	     );

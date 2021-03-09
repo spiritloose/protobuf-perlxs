@@ -1,0 +1,8 @@
+message Person {
+  oneof oneof_fields {
+    int32 age = 1;
+    int32 birth_year = 2;
+  }
+}
+
+option optimize_for = SPEED;

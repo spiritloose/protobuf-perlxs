@@ -99,6 +99,9 @@ void PerlXSGenerator::GenerateMessageXS(const Descriptor* descriptor,
       "#ifdef New\n"
       "#undef New\n"
       "#endif\n"
+      "#ifdef Copy\n"
+      "#undef Copy\n"
+      "#endif\n"
       "#ifdef Move\n"
       "#undef Move\n"
       "#endif\n"
@@ -401,77 +404,13 @@ void PerlXSGenerator::GenerateDescriptorMethodPOD(const Descriptor* descriptor,
   // Message field accessors
 
   for (int i = 0; i < descriptor->field_count(); i++) {
-    const FieldDescriptor* field = descriptor->field(i);
+    GenerateDescriptorFieldPOD(descriptor->field(i), printer, vars);
+  }
 
-    vars["field"] = field->name();
-    vars["type"] = PODFieldTypeString(field);
-
-    // has_blah or blah_size methods
-
-    if (field->is_repeated()) {
-      printer.Print(vars,
-                    "=item B<$*field*_size = $*value*-E<gt>*field*_size()>\n"
-                    "\n"
-                    "Returns the number of C<*field*> elements present "
-                    "in C<*value*>.\n"
-                    "\n");
-    } else {
-      printer.Print(vars,
-                    "=item B<$has_*field* = $*value*-E<gt>has_*field*()>\n"
-                    "\n"
-                    "Returns 1 if the C<*field*> element of C<*value*> "
-                    "is set, 0 otherwise.\n"
-                    "\n");
-    }
-
-    // clear_blah method
-
-    printer.Print(vars,
-                  "=item B<$*value*-E<gt>clear_*field*()>\n"
-                  "\n"
-                  "Clears the C<*field*> element(s) of C<*value*>.\n"
-                  "\n");
-
-    // getters
-
-    if (field->is_repeated()) {
-      printer.Print(vars,
-                    "=item B<@*field*_list = $*value*-E<gt>*field*()>\n"
-                    "\n"
-                    "Returns all values of C<*field*> in an array.  Each "
-                    "element of C<*field*_list> will be *type*.\n"
-                    "\n"
-                    "=item B<$*field*_elem = $*value*-E<gt>*field*($index)>\n"
-                    "\n"
-                    "Returns C<*field*> element C<index> from C<*value*>.  "
-                    "C<*field*> will be *type*, unless C<index> is out of "
-                    "range, in which case it will be undef.\n"
-                    "\n");
-    } else {
-      printer.Print(vars,
-                    "=item B<$*field* = $*value*-E<gt>*field*()>\n"
-                    "\n"
-                    "Returns C<*field*> from C<*value*>.  C<*field*> will "
-                    "be *type*.\n"
-                    "\n");
-    }
-
-    // setters
-
-    if (field->is_repeated()) {
-      printer.Print(vars,
-                    "=item B<$*value*-E<gt>add_*field*($value)>\n"
-                    "\n"
-                    "Adds C<value> to the list of C<*field*> in C<*value*>.  "
-                    "C<value> must be *type*.\n"
-                    "\n");
-    } else {
-      printer.Print(vars,
-                    "=item B<$*value*-E<gt>set_*field*($value)>\n"
-                    "\n"
-                    "Sets the value of C<*field*> in C<*value*> to "
-                    "C<value>.  C<value> must be *type*.\n"
-                    "\n");
+  for (int i = 0; i < descriptor->oneof_decl_count(); i++) {
+    const OneofDescriptor* oneof = descriptor->oneof_decl(i);
+    for (int j = 0; j < oneof->field_count(); j++) {
+      GenerateDescriptorFieldPOD(oneof->field(j), printer, vars);
     }
   }
 
@@ -479,6 +418,81 @@ void PerlXSGenerator::GenerateDescriptorMethodPOD(const Descriptor* descriptor,
       "\n"
       "=back\n"
       "\n");
+}
+
+void PerlXSGenerator::GenerateDescriptorFieldPOD(
+    const FieldDescriptor* field, io::Printer& printer,
+    std::map<std::string, std::string>& vars) const {
+  vars["field"] = field->name();
+  vars["type"] = PODFieldTypeString(field);
+
+  // has_blah or blah_size methods
+
+  if (field->is_repeated()) {
+    printer.Print(vars,
+                  "=item B<$*field*_size = $*value*-E<gt>*field*_size()>\n"
+                  "\n"
+                  "Returns the number of C<*field*> elements present "
+                  "in C<*value*>.\n"
+                  "\n");
+  } else {
+    printer.Print(vars,
+                  "=item B<$has_*field* = $*value*-E<gt>has_*field*()>\n"
+                  "\n"
+                  "Returns 1 if the C<*field*> element of C<*value*> "
+                  "is set, 0 otherwise.\n"
+                  "\n");
+  }
+
+  // clear_blah method
+
+  printer.Print(vars,
+                "=item B<$*value*-E<gt>clear_*field*()>\n"
+                "\n"
+                "Clears the C<*field*> element(s) of C<*value*>.\n"
+                "\n");
+
+  // getters
+
+  if (field->is_repeated()) {
+    printer.Print(vars,
+                  "=item B<@*field*_list = $*value*-E<gt>*field*()>\n"
+                  "\n"
+                  "Returns all values of C<*field*> in an array.  Each "
+                  "element of C<*field*_list> will be *type*.\n"
+                  "\n"
+                  "=item B<$*field*_elem = $*value*-E<gt>*field*($index)>\n"
+                  "\n"
+                  "Returns C<*field*> element C<index> from C<*value*>.  "
+                  "C<*field*> will be *type*, unless C<index> is out of "
+                  "range, in which case it will be undef.\n"
+                  "\n");
+  } else {
+    printer.Print(vars,
+                  "=item B<$*field* = $*value*-E<gt>*field*()>\n"
+                  "\n"
+                  "Returns C<*field*> from C<*value*>.  C<*field*> will "
+                  "be *type*.\n"
+                  "\n");
+  }
+
+  // setters
+
+  if (field->is_repeated()) {
+    printer.Print(vars,
+                  "=item B<$*value*-E<gt>add_*field*($value)>\n"
+                  "\n"
+                  "Adds C<value> to the list of C<*field*> in C<*value*>.  "
+                  "C<value> must be *type*.\n"
+                  "\n");
+  } else {
+    printer.Print(vars,
+                  "=item B<$*value*-E<gt>set_*field*($value)>\n"
+                  "\n"
+                  "Sets the value of C<*field*> in C<*value*> to "
+                  "C<value>.  C<value> must be *type*.\n"
+                  "\n");
+  }
 }
 
 void PerlXSGenerator::GenerateEnumModule(const EnumDescriptor* enum_descriptor,
@@ -1421,7 +1435,20 @@ void PerlXSGenerator::GenerateMessageXSPackage(const Descriptor* descriptor,
   // Field accessors
 
   for (int i = 0; i < descriptor->field_count(); i++) {
-    GenerateMessageXSFieldAccessors(descriptor->field(i), printer, cn);
+    const FieldDescriptor* field = descriptor->field(i);
+    if (!field->containing_oneof()) {
+      GenerateMessageXSFieldAccessors(field, printer, cn);
+    }
+  }
+
+  // Oneof fields
+
+  for (int i = 0; i < descriptor->oneof_decl_count(); i++) {
+    const OneofDescriptor* oneof = descriptor->oneof_decl(i);
+    for (int j = 0; j < oneof->field_count(); j++) {
+      // TODO: clear_$name() and $name_case()
+      GenerateMessageXSFieldAccessors(oneof->field(j), printer, cn);
+    }
   }
 }
 
@@ -1635,6 +1662,34 @@ void PerlXSGenerator::StartFieldToHashref(
   printer.Indent();
 }
 
+void PerlXSGenerator::FieldToHashref(const FieldDescriptor* field,
+                                     io::Printer& printer,
+                                     std::map<std::string, std::string>& vars,
+                                     int depth) const {
+  FieldDescriptor::CppType fieldtype = field->cpp_type();
+
+  vars["field"] = field->name();
+  vars["cppname"] = cpp::FieldName(field);
+
+  StartFieldToHashref(field, printer, vars, depth);
+
+  if (fieldtype == FieldDescriptor::CPPTYPE_MESSAGE) {
+    vars["fieldtype"] = QualifiedClassName(field->message_type());
+    printer.Print(vars,
+                  "$fieldtype$ * msg$ndepth$ = msg$pdepth$->"
+                  "mutable_$cppname$($i$);\n"
+                  "HV * hv$ndepth$ = newHV();\n"
+                  "SV * sv$depth$ = newRV_noinc((SV *)hv$ndepth$);\n"
+                  "\n");
+    MessageToHashref(field->message_type(), printer, vars, depth + 2);
+    SetupDepthVars(vars, depth);
+  } else {
+    FieldToHashrefHelper(printer, vars, field);
+  }
+
+  EndFieldToHashref(field, printer, vars, depth);
+}
+
 void PerlXSGenerator::FieldToHashrefHelper(
     io::Printer& printer, std::map<std::string, std::string>& vars,
     const FieldDescriptor* field) const {
@@ -1711,34 +1766,17 @@ void PerlXSGenerator::MessageToHashref(const Descriptor* descriptor,
                                        io::Printer& printer,
                                        std::map<std::string, std::string>& vars,
                                        int depth) const {
-  int i;
-
-  // Iterate the fields
-
-  for (i = 0; i < descriptor->field_count(); i++) {
+  for (int i = 0; i < descriptor->field_count(); i++) {
     const FieldDescriptor* field = descriptor->field(i);
-    FieldDescriptor::CppType fieldtype = field->cpp_type();
-
-    vars["field"] = field->name();
-    vars["cppname"] = cpp::FieldName(field);
-
-    StartFieldToHashref(field, printer, vars, depth);
-
-    if (fieldtype == FieldDescriptor::CPPTYPE_MESSAGE) {
-      vars["fieldtype"] = QualifiedClassName(field->message_type());
-      printer.Print(vars,
-                    "$fieldtype$ * msg$ndepth$ = msg$pdepth$->"
-                    "mutable_$cppname$($i$);\n"
-                    "HV * hv$ndepth$ = newHV();\n"
-                    "SV * sv$depth$ = newRV_noinc((SV *)hv$ndepth$);\n"
-                    "\n");
-      MessageToHashref(field->message_type(), printer, vars, depth + 2);
-      SetupDepthVars(vars, depth);
-    } else {
-      FieldToHashrefHelper(printer, vars, field);
+    if (!field->containing_oneof()) {
+      FieldToHashref(field, printer, vars, depth);
     }
-
-    EndFieldToHashref(field, printer, vars, depth);
+  }
+  for (int i = 0; i < descriptor->oneof_decl_count(); i++) {
+    const OneofDescriptor* oneof = descriptor->oneof_decl(i);
+    for (int j = 0; j < oneof->field_count(); j++) {
+      FieldToHashref(oneof->field(j), printer, vars, depth);
+    }
   }
 }
 
@@ -1819,8 +1857,6 @@ void PerlXSGenerator::FieldFromHashrefHelper(
 void PerlXSGenerator::MessageFromHashref(
     const Descriptor* descriptor, io::Printer& printer,
     std::map<std::string, std::string>& vars, int depth) const {
-  int i;
-
   SetupDepthVars(vars, depth);
 
   printer.Print(vars,
@@ -1834,78 +1870,92 @@ void PerlXSGenerator::MessageFromHashref(
 
   // Iterate the fields
 
-  for (i = 0; i < descriptor->field_count(); i++) {
+  for (int i = 0; i < descriptor->field_count(); i++) {
     const FieldDescriptor* field = descriptor->field(i);
-
-    vars["field"] = field->name();
-    vars["cppname"] = cpp::FieldName(field);
-
-    if (field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE) {
-      vars["fieldtype"] = QualifiedClassName(field->message_type());
+    if (!field->containing_oneof()) {
+      FieldFromHashref(field, printer, vars, depth);
     }
+  }
+  for (int i = 0; i < descriptor->oneof_decl_count(); i++) {
+    const OneofDescriptor* oneof = descriptor->oneof_decl(i);
+    for (int j = 0; j < oneof->field_count(); j++) {
+      FieldFromHashref(oneof->field(j), printer, vars, depth);
+    }
+  }
 
+  printer.Outdent();
+  printer.Print("}\n");
+}
+
+void PerlXSGenerator::FieldFromHashref(const FieldDescriptor* field,
+                                       io::Printer& printer,
+                                       std::map<std::string, std::string>& vars,
+                                       int depth) const {
+  vars["field"] = field->name();
+  vars["cppname"] = cpp::FieldName(field);
+
+  if (field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE) {
+    vars["fieldtype"] = QualifiedClassName(field->message_type());
+  }
+
+  printer.Print(vars,
+                "if ( (sv$depth$ = hv_fetch(hv$pdepth$, "
+                "\"$field$\", sizeof(\"$field$\") - 1, 0)) != NULL ) {\n");
+
+  printer.Indent();
+
+  if (field->is_repeated()) {
     printer.Print(vars,
-                  "if ( (sv$depth$ = hv_fetch(hv$pdepth$, "
-                  "\"$field$\", sizeof(\"$field$\") - 1, 0)) != NULL ) {\n");
-
+                  "if ( SvROK(*sv$depth$) && "
+                  "SvTYPE(SvRV(*sv$depth$)) == SVt_PVAV ) {\n");
+    printer.Indent();
+    printer.Print(vars,
+                  "AV * av$depth$ = (AV *)SvRV(*sv$depth$);\n"
+                  "\n"
+                  "for ( int i$depth$ = 0; "
+                  "i$depth$ <= av_len(av$depth$); i$depth$++ ) {\n");
     printer.Indent();
 
-    if (field->is_repeated()) {
-      printer.Print(vars,
-                    "if ( SvROK(*sv$depth$) && "
-                    "SvTYPE(SvRV(*sv$depth$)) == SVt_PVAV ) {\n");
-      printer.Indent();
-      printer.Print(vars,
-                    "AV * av$depth$ = (AV *)SvRV(*sv$depth$);\n"
-                    "\n"
-                    "for ( int i$depth$ = 0; "
-                    "i$depth$ <= av_len(av$depth$); i$depth$++ ) {\n");
-      printer.Indent();
-
-      if (field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE) {
-        printer.Print(vars,
-                      "$fieldtype$ * msg$ndepth$ = "
-                      "msg$pdepth$->add_$cppname$();\n"
-                      "SV ** sv$depth$;\n"
-                      "SV *  sv$ndepth$;\n"
-                      "\n"
-                      "if ( (sv$depth$ = "
-                      "av_fetch(av$depth$, i$depth$, 0)) != NULL ) {\n"
-                      "  sv$ndepth$ = *sv$depth$;\n");
-      } else {
-        printer.Print(vars,
-                      "SV ** sv$depth$;\n"
-                      "\n"
-                      "if ( (sv$depth$ = "
-                      "av_fetch(av$depth$, i$depth$, 0)) != NULL ) {\n");
-      }
-      printer.Indent();
-    } else {
-      if (field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE) {
-        printer.Print(vars,
-                      "$fieldtype$ * msg$ndepth$ = "
-                      "msg$pdepth$->mutable_$cppname$();\n"
-                      "SV * sv$ndepth$ = *sv$depth$;\n"
-                      "\n");
-      }
-    }
-
     if (field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE) {
-      MessageFromHashref(field->message_type(), printer, vars, depth + 2);
-      SetupDepthVars(vars, depth);
+      printer.Print(vars,
+                    "$fieldtype$ * msg$ndepth$ = "
+                    "msg$pdepth$->add_$cppname$();\n"
+                    "SV ** sv$depth$;\n"
+                    "SV *  sv$ndepth$;\n"
+                    "\n"
+                    "if ( (sv$depth$ = "
+                    "av_fetch(av$depth$, i$depth$, 0)) != NULL ) {\n"
+                    "  sv$ndepth$ = *sv$depth$;\n");
     } else {
-      FieldFromHashrefHelper(printer, vars, field);
+      printer.Print(vars,
+                    "SV ** sv$depth$;\n"
+                    "\n"
+                    "if ( (sv$depth$ = "
+                    "av_fetch(av$depth$, i$depth$, 0)) != NULL ) {\n");
     }
-
-    if (field->is_repeated()) {
-      printer.Outdent();
-      printer.Print("}\n");
-      printer.Outdent();
-      printer.Print("}\n");
-      printer.Outdent();
-      printer.Print("}\n");
+    printer.Indent();
+  } else {
+    if (field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE) {
+      printer.Print(vars,
+                    "$fieldtype$ * msg$ndepth$ = "
+                    "msg$pdepth$->mutable_$cppname$();\n"
+                    "SV * sv$ndepth$ = *sv$depth$;\n"
+                    "\n");
     }
+  }
 
+  if (field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE) {
+    MessageFromHashref(field->message_type(), printer, vars, depth + 2);
+    SetupDepthVars(vars, depth);
+  } else {
+    FieldFromHashrefHelper(printer, vars, field);
+  }
+
+  if (field->is_repeated()) {
+    printer.Outdent();
+    printer.Print("}\n");
+    printer.Outdent();
+    printer.Print("}\n");
     printer.Outdent();
     printer.Print("}\n");
   }

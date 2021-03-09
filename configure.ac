@@ -29,6 +29,7 @@ src/google/protobuf/compiler/perlxs/perlxs_config.h
 examples/big/Makefile.PL
 examples/embedded/Makefile.PL
 examples/error/Makefile.PL
+examples/oneof/Makefile.PL
 examples/package/Makefile.PL
 examples/simple/Makefile.PL
 examples/string_bytes/Makefile.PL

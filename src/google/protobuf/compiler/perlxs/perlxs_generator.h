@@ -79,6 +79,10 @@ class LIBPROTOC_EXPORT PerlXSGenerator : public CodeGenerator {
   void GenerateDescriptorMethodPOD(const Descriptor* descriptor,
                                    io::Printer& printer) const;
 
+  void GenerateDescriptorFieldPOD(
+      const FieldDescriptor* field, io::Printer& printer,
+      std::map<std::string, std::string>& vars) const;
+
   void GenerateEnumModule(const EnumDescriptor* enum_descriptor,
                           OutputDirectory* outdir) const;
 
@@ -132,6 +136,10 @@ class LIBPROTOC_EXPORT PerlXSGenerator : public CodeGenerator {
                            std::map<std::string, std::string>& vars,
                            int depth) const;
 
+  void FieldToHashref(const FieldDescriptor* field, io::Printer& printer,
+                      std::map<std::string, std::string>& vars,
+                      int depth) const;
+
   void FieldToHashrefHelper(io::Printer& printer,
                             std::map<std::string, std::string>& vars,
                             const FieldDescriptor* field) const;
@@ -141,6 +149,10 @@ class LIBPROTOC_EXPORT PerlXSGenerator : public CodeGenerator {
                          int depth) const;
 
   void MessageToHashref(const Descriptor* descriptor, io::Printer& printer,
+                        std::map<std::string, std::string>& vars,
+                        int depth) const;
+
+  void FieldFromHashref(const FieldDescriptor* field, io::Printer& printer,
                         std::map<std::string, std::string>& vars,
                         int depth) const;
 
