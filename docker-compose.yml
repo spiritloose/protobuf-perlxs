@@ -1,0 +1,9 @@
+version: '3'
+services:
+  dev:
+    platform: linux/amd64
+    build: .
+    volumes:
+      - .:/protobuf-perlxs
+    working_dir: /protobuf-perlxs
+    command: perl -esleep
